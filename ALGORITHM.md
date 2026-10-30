@@ -3,7 +3,9 @@
 ## 1. Input
 The algorithm receives:
 - A 3D raster matrix M.
-- Three points (a, b, c) defining the plane.
+- A plane defined by either:
+  - Three points (a, b, c), forming an isosceles triangle.
+  - Four points (a1, a2, b, c), forming an isosceles trapezoid.
 
 ## 2. Output
 The algorithm generates a 2D matrix E representing the plane projection.
