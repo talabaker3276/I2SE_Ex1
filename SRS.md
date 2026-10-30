@@ -57,9 +57,11 @@ A plane may also be represented by four points (a1, a2, b, c), where:
 The project should include a testing strategy to verify:
 - Correct reading of NRRD files.
 - Correct reading of plane coordinates from CSV files.
+- Correct handling of planes defined by 3 points.
+- Correct handling of planes defined by 4 points.
 - Correct generation of 2D projections.
 - Correct generation of the MP4 output file.
-- Runtime performance of the implementation.
+- Runtime performance of at least 30 FPS.
 
 
 ## 6. Demo
