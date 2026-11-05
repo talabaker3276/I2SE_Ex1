@@ -1,71 +1,29 @@
 # Software Requirements Specification (SRS)
 
-## 1. Introduction
+## Purpose and scope
 
-### 1.1 Purpose
-The purpose of this project is to design and implement a program that generates 2D plane projections from 3D volumetric data stored in NRRD format.
+The application converts specified triangular/trapezoidal cross-sections of a 3D NRRD integer volume into a sequence of MP4 frames. It is a sampling program rather than a 3D display or medical analysis tool.
 
-### 1.2 Scope
-The program will read 3D volumetric data from an NRRD file and plane coordinates from a CSV file. For each plane, the program will generate a 2D projection. The generated projections will be combined into an MP4 video.
+## Functional requirements
 
+| ID | Requirement | Acceptance check |
+|---|---|---|
+| FR-01 | CLI accepts `python Ex0.py file.nrrd file.csv file.mp4` | Valid invocation produces output; missing arguments show usage |
+| FR-02 | Read 3D integer NRRD data, dimensions 1–1023 per axis | Valid sample loads; invalid dimensions/data types fail clearly |
+| FR-03 | Parse every nonblank CSV row as 9 (triangle) or 12 (trapezoid) finite numbers | Malformed inputs fail with line number |
+| FR-04 | Validate triangle: `abs(dist(a,b)-dist(a,c)) < 0.001`, nonzero side/base | Reject unequal or degenerate sides |
+| FR-05 | Validate trapezoid: equal-length `a1->b` and `a2->c` (EPS=0.001), top width <= bottom width, and coplanarity | Reject violated geometry |
+| FR-06 | Sample nearest voxel on each horizontal row of the plane; out-of-volume => 0 | Compare with synthetic data and boundary tests |
+| FR-07 | Preserve CSV order in output video, exactly one frame per nonblank row | Check frame count and frame ordering |
+| FR-08 | MP4 contains consistent, even-size grayscale RGB images (canvas padding is black) | Decode video and inspect dimensions |
 
-## 2. Functional Requirements
+## Nonfunctional requirements
 
-### 2.1 Input
-The program shall accept:
-- An NRRD file containing 3D volumetric data.
-- A CSV file containing a list of plane coordinates defined by 3 or 4 points.
+- **Correctness:** deterministic projections from valid inputs, finite-coordinate validation and clear errors.
+- **Runtime:** assignment target is >=30 FPS and expected >=100 FPS for 500³ input. A benchmark must measure projection time and document environment, workload and actual measurements; it is not automatically guaranteed.
+- **Reliability:** avoid partially replacing an existing video on input-validation failure (all plane computations precede encoding).
+- **Maintainability:** standalone geometry/parser/projection functions, source-controlled changes, reproducible test plan.
 
-### 2.2 Processing
-The program shall:
-- Read the 3D data from the NRRD file.
-- Read the plane coordinates from the CSV file.
-- Compute a 2D projection for each plane.
+## Assumptions and limitations
 
-### 2.3 Output
-The program shall generate an MP4 video containing one frame for each plane, in the same order as the planes appear in the CSV file.
-
-
-## 3. Non-Functional Requirements
-
-### 3.1 Performance
-The implementation should be runtime-efficient. For a 3D matrix of size 500x500x500, a performance of at least 30 FPS is required, while 100 FPS or more is expected.
-
-### 3.2 Correctness and Stability
-The program should be correct and stable when processing valid input files.
-
-
-## 4. Plane Requirements
-
-### 4.1 Plane Defined by 3 Points
-A plane may be represented by three points (a, b, c), where:
-
-|dist(a,b) - dist(a,c)| < EPS
-
-where EPS = 0.001.
-
-### 4.2 Plane Defined by 4 Points
-A plane may also be represented by four points (a1, a2, b, c), where:
-
-- |dist(a1,b) - dist(a2,c)| < EPS
-- dist(a1,a2) <= dist(b,c)
-- The vectors a1→b and a2→c are on the same plane.
-
-
-## 5. Testing Requirements
-
-The project should include a testing strategy to verify:
-- Correct reading of NRRD files.
-- Correct reading of plane coordinates from CSV files.
-- Correct handling of planes defined by 3 points.
-- Correct handling of planes defined by 4 points.
-- Correct generation of 2D projections.
-- Correct generation of the MP4 output file.
-- Runtime performance of at least 30 FPS.
-
-
-## 6. Demo
-
-The program should support execution in the following format:
-
-python Ex0.py file.nrrd file.csv file.mp4
+Voxel positions are interpreted in index order `(x,y,z)` and rounded to nearest integer. Input data is not resampled using NRRD spatial directions. Each plane has potentially different native image dimensions: for the MP4, smaller planes are centered on a black canvas with a uniform even width and height. Each frame is independently contrast-scaled for visual output; raw sampled matrix values are not changed. H.264/FFmpeg must be available.

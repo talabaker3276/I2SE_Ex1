@@ -1,45 +1,32 @@
-# I2SE_Ex1 - 3D Volume Plane Projection
+# I2SE Ex1 — 3D volume plane projection
 
-## Project Description
-This project is part of the Introduction to Software Engineering course.
+Introduction to Software Engineering, Ariel University. This program samples a triangular or trapezoidal plane through a 3D NRRD raster and produces one MP4 frame per plane in CSV order.
 
-The goal of the project is to design and implement an efficient algorithm
-for generating 2D plane projections from 3D volumetric data stored in NRRD format.
+## Problem and scope
 
-## Problem
-Given a 3D raster data matrix and a plane defined by 3 or 4 points,
-the program computes a 2D image representing the projection of
-that plane within the 3D volume.
+Input is a 3D integer voxel matrix `M[x,y,z]`, with each dimension from 1 to 1023, and a list of 3-point isosceles triangles or 4-point isosceles trapezoids. The output is an MP4 video of 2D sampled slices, not an accumulation/ray-cast projection. Voxel coordinates are used, not physical millimeters; nearest-neighbor lookup is used, and out-of-bounds samples become zero. The sampling/design choices and assumptions appear in [ALGORITHM.md](ALGORITHM.md).
 
-The implementation supports:
-- 3-point planes forming an isosceles triangle.
-- 4-point planes forming an isosceles trapezoid.
+The work includes input validation, CSV parsing, plane sampling and video output. It does not include an interactive 3D viewer or medical interpretation. The MRI volume must be supplied separately; `MRHead_1.nrrd` is not tracked in this repository.
 
-## Project Scope
-The project:
-- Reads 3D volumetric data from an NRRD file.
-- Reads plane coordinates from a CSV file.
-- Validates 3-point and 4-point plane definitions.
-- Generates a 2D projection for each plane.
-- Creates an MP4 video containing the generated projections as frames.
-- Tests correctness, stability, and runtime performance.
+## Install and run
 
-## Usage
+Python 3.10+ and an FFmpeg-capable environment are recommended.
 
-Run the program using:
-
-python Ex0.py file.nrrd file.csv file.mp4
-
-Example:
-
+```bash
+python -m pip install -r requirements.txt
 python Ex0.py MRHead_1.nrrd planes.csv result.mp4
+```
+
+The exact required CLI is `python Ex0.py file.nrrd file.csv file.mp4`. Each CSV row contains 9 comma-separated coordinates for `a,b,c` or 12 for `a1,a2,b,c`, flattened as `x,y,z` triples, no header. The 4-point ordering matters. An example appears in [planes.csv](planes.csv). Every plane must pass geometry validation; invalid input gives an error and no new video.
+
+## Documentation
+
+- [SRS.md](SRS.md) — requirements and acceptance criteria
+- [ALGORITHM.md](ALGORITHM.md) — detailed design and sampling choices
+- [DATASET.md](DATASET.md) — dataset provenance and limits
+- [TESTING.md](TESTING.md) — reproducible tests
+- [RESULTS.md](RESULTS.md) — experimental status, methodology and unverified historical claims
 
 ## Performance
-The implementation was tested using four plane projections.
 
-The measured performance was approximately 72.59 FPS,
-which satisfies the required minimum performance of 30 FPS.
-
-## Output
-The program generates an MP4 file containing one frame for each plane
-defined in the CSV file, in the same order as the input planes.
+The exercise asks for at least 30 FPS and expects 100 FPS on a 500×500×500 volume. This project reports *projection throughput* separately from file loading and video encoding. No verified benchmark at 500³ is included yet; do not interpret results on a small MRI or four frames as proof that the requirement is met. Execute the program and document actual machine, volume, number of planes and runtime in RESULTS.md.

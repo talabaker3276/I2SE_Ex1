@@ -1,28 +1,27 @@
-# Testing Strategy
+# Testing strategy
 
-## 1. NRRD Input Test
-Verify that the program can successfully read the `MRHead_1.nrrd` file and load the 3D volumetric data.
+Tests should record **input, expected outcome, actual outcome, runtime, and pass/fail**, rather than declaring success without executing the code.
 
-## 2. CSV Input Test
-Verify that the program can correctly read plane coordinates from a CSV file for planes defined by 3 or 4 points.
+| ID | Test | Expected result |
+|---|---|---|
+| T01 | Synthetic 3D integer NRRD with known voxel values | Plane samples equal expected voxel values |
+| T02 | Triangle with `dist(a,b)=dist(a,c)` | Accepted and projected |
+| T03 | Unequal triangle sides | Clear `ValueError` |
+| T04 | Four coplanar points with equal sweep-side lengths, top<=bottom | Accepted and projected |
+| T05 | Noncoplanar or unequal trapezoid sides | Rejected |
+| T06 | Plane partially outside 3D array | Outside positions are zero |
+| T07 | CSV row with 8/10/11 values, malformed number or NaN | Rejected with line number |
+| T08 | Three triangles + one trapezoid from `planes.csv` | Exactly 4 ordered output frames |
+| T09 | Different projection dimensions | Output has fixed even dimensions and decodes properly |
+| T10 | Real NRRD/MRI and example CLI | NRRD read + MP4 output + logged dimensions |
+| T11 | Many planes against a 500³ byte NRRD | Record projection FPS; check >=30 and compare with 100 expected |
 
-## 3. Projection Test
-Verify that the algorithm generates a valid 2D projection for each plane defined in the CSV file.
+## Commands
 
-## 4. Boundary Test
-Test planes that contain points outside the boundaries of the 3D matrix. Points outside the volume should receive the value 0.
+```bash
+python -m pip install -r requirements.txt
+python Ex0.py MRHead_1.nrrd planes.csv result.mp4
+python -m unittest discover -s tests -v
+```
 
-## 5. MP4 Output Test
-Verify that the program creates an MP4 file containing one frame for each plane in the CSV file, in the same order.
-
-## 6. Performance Test
-Measure the runtime performance of the projection algorithm and verify that it satisfies the required performance of at least 30 FPS.
-
-In the experiment with four planes, the measured performance was approximately 72.59 FPS, so the performance requirement was satisfied.
-
-## 7. Demo Test
-Test the complete program using the required command:
-
-python Ex0.py file.nrrd file.csv file.mp4
-
-Verify that valid NRRD and CSV input files produce the expected MP4 output file.
+Projection FPS is `number_of_planes / elapsed_projection_seconds`. Measure video encoding and loading separately. Use repeated geometries (e.g. >=100) and an adequately sized volume for stable performance estimates. Only report a test as passed after actually running it.
